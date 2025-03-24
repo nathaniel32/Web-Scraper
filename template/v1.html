@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Data</title>
+    </head>
+    <body>
+        <form id="bot_surfing">
+            <h2>manual url</h2>
+            <input type="url" name="url">
+            <input type="submit">
+        </form>
+        <hr>
+        <div>
+            <h2>config</h2>
+            <h3>Pattern</h3>
+            <div id="data_pattern"></div>
+            <form id="form_pattern">
+                <input type="text" name="pattern">
+                <input type="submit">
+            </form>
+            
+            <h3>Time</h3>
+            <div id="data_time"></div>
+            <form id="form_time">
+                <input type="number" name="time">
+                <input type="submit">
+            </form>
+            <h3>search data</h3>
+            <div id="data_search"></div>
+            <form id="form_search">
+                <input type="text" name="search">
+                <select name="search_typ" required>
+                    <option value="" disabled selected>Typ</option>
+                    <option value="1">TAG_NAME</option>
+                    <option value="2">CSS_SELECTOR</option>
+                </select>
+                <input type="text" name="search_category">
+                <input type="submit">
+            </form>
+        </div>
+        <hr>
+        <h2>Worker</h2>
+        <label>
+            <input type="checkbox" id="bot_remote">On/Off
+        </label>
+        <hr>
+        <script>
+            //TODO munculkan kategori dari database
+            //munculkan TYP dari javascript
+            //bisa update kategori dari table yg di print
+            //buat ui yg bagus. menunjukan message dan jawaban dari websocket
+            //error handling
+            const ActionMap = Object.freeze({
+                REMOTE: "remote",
+                SURFING: "surfing",
+                INFORMATION: "information",
+                CONFIG: "config",
+                STATUS: "status",
+            });
+
+            function show_message_bar(message){
+                console.log(message);
+            }
+
+            const bot_ws = new WebSocket("/bot_ws");
+            bot_ws.onmessage = function(event) {
+                const json_message = JSON.parse(event.data);
+                const action = json_message.action;
+                const message = json_message.message
+                const data = json_message.data;
+                
+                show_message_bar(message);
+
+                switch (action) {
+                    case ActionMap.REMOTE:
+                        bot_remote.checked = json_message.data;
+                        break;
+
+                    case ActionMap.SURFING:
+                        break;
+
+                    case ActionMap.INFORMATION:
+                        console.log(json_message);
+                        break;
+
+                    case ActionMap.CONFIG:
+                        console.log(json_message);
+                        break;
+
+                    case ActionMap.STATUS:
+                        console.log(json_message);
+                        break;
+
+                    default:
+                        console.log("Unknown action:", action);
+                        break;
+                }
+            };
+            const check_connection = () => {
+                if (bot_ws.readyState === WebSocket.OPEN) {
+                    return true;
+                }
+                console.log("Server: 500");
+                return false
+            }
+            const send_to_server = (data, action) =>{
+                if (check_connection()) {
+                    bot_ws.send(JSON.stringify({data: data, action: action}));
+                }
+            }
+        </script>
+        <script>
+            const bot_surfing = document.getElementById("bot_surfing");
+            bot_surfing.onsubmit = (event)=>{
+                event.preventDefault();
+                const url = bot_surfing.querySelector("[name='url']").value;
+                send_to_server({url: url, force: true}, ActionMap.SURFING);
+            };
+
+            const bot_remote = document.getElementById("bot_remote");
+            bot_remote.addEventListener('change', function() {
+                send_to_server(null, ActionMap.REMOTE);
+            });
+        </script>
+        <script>
+            const data_pattern = document.getElementById("data_pattern");
+            const form_pattern = document.getElementById("form_pattern");
+            const input_pattern = form_pattern.querySelector("[name='pattern']");
+            
+            const data_time = document.getElementById("data_time");
+            const form_time = document.getElementById("form_time");
+            const input_time = form_time.querySelector("[name='time']");
+            
+            const data_search = document.getElementById("data_search");
+            const form_search = document.getElementById("form_search");
+            const input_search = form_search.querySelector("[name='search']");
+            const input_search_typ = form_search.querySelector("[name='search_typ']");
+            const input_search_category = form_search.querySelector("[name='search_category']");
+
+            form_pattern.onsubmit = (event)=>{
+                event.preventDefault();
+                if(check_connection()){
+                    const pattern_container = document.createElement("div");
+                    const pattern_text = document.createElement("span");
+                    const pattern_button = document.createElement("button");
+                    pattern_container.setAttribute("data-pattern", input_pattern.value);
+                    pattern_text.textContent = input_pattern.value;
+                    pattern_button.textContent = "delete";
+                    pattern_container.append(pattern_text);
+                    pattern_container.append(pattern_button);
+                    data_pattern.append(pattern_container);
+                    pattern_button.onclick = ()=>{
+                        if(check_connection()){
+                            pattern_container.remove();
+                            upload_config();
+                        }
+                    };
+                    upload_config();
+                    input_pattern.value = null;
+                }
+            };
+
+            form_time.onsubmit = (event)=>{
+                event.preventDefault();
+                if(check_connection()){
+                    data_time.textContent = input_time.value;
+                    data_time.setAttribute("data-time", input_time.value);
+                    upload_config();
+                    input_time.value = null;
+                }
+            };
+
+            form_search.onsubmit = (event)=>{
+                event.preventDefault();
+                if(check_connection()){
+                    const search_container = document.createElement("div");
+                    const search_text = document.createElement("span");
+                    const search_typ_text = document.createElement("span");
+                    const search_typ_category = document.createElement("span");
+                    const search_button = document.createElement("button");
+                    search_container.setAttribute("data-search", JSON.stringify({search: input_search.value, typ: input_search_typ.value, category: input_search_category.value}));
+                    search_text.textContent = input_search.value;
+                    search_typ_text.textContent = input_search_typ.value;
+                    search_typ_category.textContent = input_search_category.value;
+                    search_button.textContent = "delete";
+                    search_container.append(search_text);
+                    search_container.append(search_typ_text);
+                    search_container.append(search_typ_category);
+                    search_container.append(search_button);
+                    data_search.append(search_container);
+                    search_button.onclick = ()=>{
+                        if(check_connection()){
+                            search_container.remove();
+                            upload_config();
+                        }
+                    };
+                    upload_config();
+                    input_search.value = null;
+                    input_search_typ.value = "";
+                }
+            };
+
+            const upload_config = () => {
+                const pattern_data = data_pattern.querySelectorAll("[data-pattern]");
+                const pattern_array = [];
+                pattern_data.forEach((element) => {
+                    const pattern_value = element.getAttribute("data-pattern");
+                    pattern_array.push(pattern_value);
+                });
+
+                const data_time_value = data_time.getAttribute("data-time");
+
+                const search_data = data_search.querySelectorAll("[data-search]");
+                const search_array = [];
+                search_data.forEach((element) => {
+                    const search_value = element.getAttribute("data-search");
+                    search_array.push(JSON.parse(search_value));
+                });
+                send_to_server({data_pattern: pattern_array, data_time: data_time_value, data_search: search_array}, ActionMap.CONFIG);
+            };
+        </script>
+    </body>
+</html>

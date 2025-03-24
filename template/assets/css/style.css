@@ -1,0 +1,144 @@
+/* General Layout */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#app {
+    width: 80%;
+    max-width: 1200px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Titles */
+h2, h3 {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Bot Surfing */
+#bot_surfing {
+    margin-bottom: 30px;
+}
+
+#bot_surfing h2 {
+    font-size: 24px;
+}
+
+#form_url {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#form_url label {
+    font-weight: 600;
+    color: #333;
+}
+
+#form_url input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+#form_url button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#form_url button:hover {
+    background-color: #0056b3;
+}
+
+/* Config */
+#config {
+    margin-bottom: 30px;
+}
+
+.config-section {
+    margin-bottom: 20px;
+}
+
+.config-section h3 {
+    font-size: 20px;
+    color: #007bff;
+}
+
+.config-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Inputs, Form */
+.config-section input, .config-section select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+.config-section button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.config-section button:hover {
+    background-color: #218838;
+}
+
+/* Worker */
+#worker {
+    margin-top: 30px;
+}
+
+#worker h2 {
+    font-size: 24px;
+}
+
+#worker label {
+    font-weight: 600;
+    color: #333;
+}
+
+#worker input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 10px;
+}
+
+#worker input[type="checkbox"]:checked {
+    background-color: #28a745;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #app {
+        width: 90%;
+    }
+
+    .config-section {
+        width: 100%;
+    }
+}
