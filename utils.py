@@ -222,7 +222,7 @@ class Bot:
                             message = "ok"
                         except Exception as e:
                             self.db.rollback()
-                            message = "duplicate"
+                            message = "db error!"
                     else:
                         message = "title not found"
                     

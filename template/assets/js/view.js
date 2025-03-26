@@ -267,6 +267,7 @@ class View {
         timeForm.appendChild(timeLabel);
 
         const timeInput = document.createElement('input');
+        timeInput.value = 5;
         this.input_time = timeInput;
         timeInput.type = 'number';
         timeInput.name = 'time';
@@ -292,20 +293,20 @@ class View {
         [this.form_content_search, this.input_content_search, this.input_search_content_typ] = this.search_template(searchSection, "form_search_content", "input_search_content", "Content");
         [this.form_email_search, this.input_email_search, this.input_search_email_typ] = this.search_template(searchSection, "form_search_email", "input_search_email", "Email");
         //---------------------------------------------------------------------
-        this.input_title_search.value = "h1"
-        this.input_search_title_typ.value = "1"
+        this.input_title_search.value = "h1";
+        this.input_search_title_typ.value = "1";
 
-        this.input_description_search.value = ".text-body-medium.break-words"
-        this.input_search_description_typ.value = "2"
+        this.input_description_search.value = ".text-body-medium.break-words";
+        this.input_search_description_typ.value = "2";
 
-        this.input_location_search.value = ".text-body-small.inline.t-black--light break-words"
-        this.input_search_location_typ.value = "2"
+        this.input_location_search.value = ".text-body-small.inline.t-black--light.break-words";
+        this.input_search_location_typ.value = "2";
         
-        this.input_content_search.value = ".display-flex.ph5.pv3"
-        this.input_search_content_typ.value = "2"
+        this.input_content_search.value = ".display-flex.ph5.pv3";
+        this.input_search_content_typ.value = "2";
 
-        this.input_email_search.value = ".display-flex.ph5.pv3"
-        this.input_search_email_typ.value = "2"
+        this.input_email_search.value = ".display-flex.ph5.pv3";
+        this.input_search_email_typ.value = "2";
 
         configSection.appendChild(searchSection);
 

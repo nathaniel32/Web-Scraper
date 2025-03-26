@@ -16,8 +16,8 @@ model_base = declarative_base()
 
 class TScraping(model_base):
     __tablename__ = 't_scraping'
-
-    url_s = Column(Text, primary_key=True)
+    id_s = Column(Integer, primary_key=True, autoincrement=True)
+    url_s = Column(Text, nullable=False)
     title_s = Column(Text, nullable=True)
     description_s = Column(Text, nullable=True)
     location_s = Column(Text, nullable=True)
