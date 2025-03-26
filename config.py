@@ -14,3 +14,5 @@ class BotAction(Enum):
     INFORMATION = "information"
     CONFIG = "config"
     STATUS = "status"
+
+EMAIL_PATTERN = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'

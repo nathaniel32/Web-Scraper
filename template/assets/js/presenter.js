@@ -6,7 +6,7 @@ const Presenter = (() => {
     let bot_ws;
     let view_class;
 
-    function init() {
+    async function init() {
         bot_ws = new WebSocket("/bot_ws");
         bot_ws.onopen = () => {
             view_class.notification("connection established");
@@ -34,7 +34,7 @@ const Presenter = (() => {
                     break;
 
                 case model_class.ActionMap.CONFIG:
-                    console.log(json_data);
+                    //console.log(json_data);
                     break;
 
                 case model_class.ActionMap.STATUS:
@@ -58,8 +58,7 @@ const Presenter = (() => {
             send_to_server(null, model_class.ActionMap.REMOTE);
         });
 
-        view_class.bind_bot_pattern((event) => { //listener pattern
-            event.preventDefault();
+        function update_pattern(){
             if(check_connection()){
                 const pattern_container = document.createElement("div");
                 const pattern_text = document.createElement("span");
@@ -79,47 +78,53 @@ const Presenter = (() => {
                 upload_config();
                 view_class.input_pattern.value = null;
             }
+        }
+
+        view_class.bind_bot_pattern((event) => { //listener pattern
+            event.preventDefault();
+            update_pattern();
         });
 
-        view_class.bind_bot_time((event) => {
-            event.preventDefault();
+        view_class.bind_bot_time(() => {
             if(check_connection()){
-                view_class.data_time.textContent = view_class.input_time.value;
-                view_class.data_time.setAttribute("data-time", view_class.input_time.value);
                 upload_config();
-                view_class.input_time.value = null;
             }
         });
 
-        view_class.bind_bot_search((event) => {
-            event.preventDefault();
+        view_class.bind_bot_title(() => {
             if(check_connection()){
-                const search_container = document.createElement("div");
-                const search_text = document.createElement("span");
-                const search_typ_text = document.createElement("span");
-                const search_typ_category = document.createElement("span");
-                const search_button = document.createElement("button");
-                search_container.setAttribute("data-search", JSON.stringify({search: view_class.input_search.value, typ: view_class.input_search_typ.value, category: view_class.input_search_category.value}));
-                search_text.textContent = view_class.input_search.value;
-                search_typ_text.textContent = view_class.input_search_typ.value;
-                search_typ_category.textContent = view_class.input_search_category.value;
-                search_button.textContent = "delete";
-                search_container.append(search_text);
-                search_container.append(search_typ_text);
-                search_container.append(search_typ_category);
-                search_container.append(search_button);
-                view_class.data_search.append(search_container);
-                search_button.onclick = ()=>{
-                    if(check_connection()){
-                        search_container.remove();
-                        upload_config();
-                    }
-                };
                 upload_config();
-                view_class.input_search.value = null;
-                view_class.input_search_typ.value = "";
             }
         });
+
+        view_class.bind_bot_description(() => {
+            if(check_connection()){
+                upload_config();
+            }
+        });
+
+        view_class.bind_bot_location(() => {
+            if(check_connection()){
+                upload_config();
+            }
+        });
+
+        view_class.bind_bot_content(() => {
+            if(check_connection()){
+                upload_config();
+            }
+        });
+
+        view_class.bind_bot_email(() => {
+            if(check_connection()){
+                upload_config();
+            }
+        });
+        
+        setTimeout(function() {
+            update_pattern();
+            upload_config();
+        }, 500);
     }
 
     const check_connection = () => {
@@ -131,14 +136,28 @@ const Presenter = (() => {
     }
 
     const send_to_server = (data, action) =>{
+        //console.log(data, action);
         if (check_connection()) {
             bot_ws.send(JSON.stringify({data: data, action: action}));
+        }else{
+            console.log("ws error");
         }
     }
 
-    const upload_config = () => { //TODO
-        const [pattern_array, data_time_value, search_array] = model_class.get_config_data(view_class);
-        send_to_server({data_pattern: pattern_array, data_time:  data_time_value, data_search: search_array}, model_class.ActionMap.CONFIG);
+    const upload_config = () => {
+        model_class.data_time = view_class.input_time.value;
+        model_class.data_title.feature = view_class.input_title_search.value;
+        model_class.data_title.typ = view_class.input_search_title_typ.value;
+        model_class.data_description.feature = view_class.input_description_search.value;
+        model_class.data_description.typ = view_class.input_search_description_typ.value;
+        model_class.data_location.feature = view_class.input_location_search.value;
+        model_class.data_location.typ = view_class.input_search_location_typ.value;
+        model_class.data_content.feature = view_class.input_content_search.value;
+        model_class.data_content.typ = view_class.input_search_content_typ.value;
+        model_class.data_email.feature = view_class.input_email_search.value;
+        model_class.data_email.typ = view_class.input_search_email_typ.value;
+        const [pattern_array, data_time_value, data_title_value, data_description_value, data_location_value, data_content_value, data_email_value] = model_class.get_config_data(view_class);
+        send_to_server({data_pattern: pattern_array, data_time:  data_time_value, data_title: data_title_value, data_description: data_description_value, data_location: data_location_value, data_content: data_content_value, data_email: data_email_value}, model_class.ActionMap.CONFIG);
     }
     
     return {init};

@@ -28,7 +28,7 @@ async def bot_ws(websocket: WebSocket, db: database.db_dependency):
 
     await bot.connect()
     await bots_manager.manager_add(bot)
-    await bot.get_set_bot_config()
+    #await bot.get_set_bot_config()
     await bot.get_bot_status()
     try:
         while True:

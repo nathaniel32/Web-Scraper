@@ -9,36 +9,22 @@ import config
 from selenium.webdriver.common.by import By
 import asyncio
 import time
-
-#TODO error handling
+import re
 
 class BotManager:
     def __init__(self):
         self.global_db = database.session_local()
         self.active_bots: list[Bot] = []
         self.global_urls = []
-        self.global_categorys = []
         self.init()
 
     def init(self):
-        query_url = self.global_db.query(database.TScrap.url_s).all()
+        query_url = self.global_db.query(database.TScraping.url_s).all()
         self.global_urls.extend([url_s for (url_s,) in query_url])
         print(self.global_urls)
 
-        query_category = self.global_db.query(database.TCategory.name_c).all()
-        self.global_categorys.extend([name_c for (name_c,) in query_category])
-        print(self.global_categorys)
-
     def get_data_database(self):
-        #TODO update database untuk semua user realtime
-        query = (
-            self.global_db.query(database.TScrap, database.TCategory, database.TData)
-            .join(database.TData, database.TScrap.id_s == database.TData.id_s)
-            .join(database.TCategory, database.TCategory.id_c == database.TData.id_c)
-            .all()
-        )
-        for scrap, category, data in query:
-            print(scrap.url_s, category.id_c, data.id_d)
+        pass
 
     def get_set_data_category(self, data):
         pass
@@ -76,8 +62,13 @@ class Bot:
         self.url = []
         self.url_index = 0
         self.pattern = []
-        self.time = 1
-        self.search = []
+        self.time = None
+        self.title_value = None
+        self.description_value = None
+        self.location_value = None
+        self.content_value = None
+        self.email_value = None
+        self.surfing_is_free = True
 
     async def connect(self):
         await self.websocket.accept()
@@ -85,12 +76,16 @@ class Bot:
     async def get_set_bot_config(self, data=None):
         if data:
             self.pattern = data["data_pattern"]
-            self.time = int(data["data_time"]) if data["data_time"] is not None else 0
-            self.search = data["data_search"]
-        await self.websocket.send_json({"action": config.BotAction.CONFIG.value, "message": "ok", "data": {"pattern": self.pattern, "time": self.time, "search": self.search}})
+            self.time = int(data["data_time"]) if isinstance(data["data_time"], (int, float, str)) and str(data["data_time"]).isdigit() else 0
+            self.title_value = data["data_title"]
+            self.description_value = data["data_description"]
+            self.location_value = data["data_location"]
+            self.content_value = data["data_content"]
+            self.email_value = data["data_email"]
+        await self.websocket.send_json({"action": config.BotAction.CONFIG.value, "message": "ok", "data": {"pattern": self.pattern, "time": self.time, "title": self.title_value, "description": self.description_value, "location": self.location_value, "content": self.content_value, "email": self.email_value}})
 
     async def get_bot_status(self):
-        await self.websocket.send_json({"action": config.BotAction.STATUS.value, "message": "ok", "data": {"url": self.url, "url_index": self.url_index}})
+        await self.websocket.send_json({"action": config.BotAction.STATUS.value, "message": "ok", "data": {"url": len(self.url), "url_index": self.url_index}})
     
     def bot_remote(self, data=None):
         self.auto_visit = not self.auto_visit
@@ -101,9 +96,12 @@ class Bot:
         while True:
             if self.url_index < len(self.url):
                 if self.auto_visit:
-                    url_index_booking = self.url_index
-                    self.url_index += 1
-                    asyncio.run(self.bot_surfing({"url": self.url[url_index_booking], "force":False}))
+                    if self.surfing_is_free:
+                        url_index_booking = self.url_index
+                        self.url_index += 1
+                        asyncio.run(self.bot_surfing({"url": self.url[url_index_booking], "force":False}))
+                    else:
+                        time.sleep(0.5)
                 else:
                     try:
                         asyncio.run(self.websocket.send_json({"action": config.BotAction.REMOTE.value, "message": "auto_visit is disabled", "data": self.auto_visit}))
@@ -116,87 +114,132 @@ class Bot:
                 break
 
     async def bot_surfing(self, data):
-        if self.driver is None or not self.browser_check():
-            self.open_browser()
+        if self.surfing_is_free:
+            self.surfing_is_free = False
+            if self.driver is None or not self.browser_check():
+                self.open_browser()
 
-        url = data["url"]
-        if url not in self.manager.global_urls or data["force"]:
-            self.manager.global_urls.append(url)
-            #error handling
-            self.driver.get(url)
-
-            time.sleep(self.time)
-
-            try:
-                WebDriverWait(self.driver, self.time).until(
-                    EC.presence_of_element_located((By.TAG_NAME, "body"))
-                )
-            except:
-                print("timeout!")
-
-            search_data_array = []
-            for element in self.search:
+            url = data["url"]
+            if url not in self.manager.global_urls or data["force"]:
+                self.manager.global_urls.append(url)
+                #error handling
                 try:
-                    this_element_map = next((item for item in self.search_map if item["typ"] == element["typ"]), None)
-                    if this_element_map:
-                        search_element = self.driver.find_element(this_element_map["data"], element["search"])
-                        search_data_array.append({"category": element["category"], "data": search_element.text.strip()})
-                except Exception as e:
-                    print("error: element not found")
-            
-            print(search_data_array)
-            
-            try:
-                anchor_tags = self.driver.find_elements(By.TAG_NAME, "a")
-                if anchor_tags:
+                    self.driver.get(url)
+
+                    time.sleep(self.time)
+
                     try:
-                        new_url = [tag.get_attribute("href") for tag in anchor_tags]
-                        new_url_global_checked = [url for url in new_url if url not in self.manager.global_urls]
-                        self.url = list(dict.fromkeys(self.url + new_url_global_checked))
+                        WebDriverWait(self.driver, self.time).until(
+                            EC.presence_of_element_located((By.TAG_NAME, "body"))
+                        )
+                    except:
+                        print("timeout!")
+                        
+                    ################################################################################
+                    try:
+                        title_element_map = next((item for item in self.search_map if item["typ"] == self.title_value["typ"]), None)
+                        title_element = self.driver.find_element(title_element_map["data"], self.title_value["feature"])
+                        title_value = title_element.text.strip()
+                    except:
+                        title_value = None
 
-                        print(len(new_url), len(new_url_global_checked), len(self.url))
+                    print("value title:", title_value)
+
+                    try:
+                        description_element_map = next((item for item in self.search_map if item["typ"] == self.description_value["typ"]), None)
+                        description_element = self.driver.find_element(description_element_map["data"], self.description_value["feature"])
+                        description_value = description_element.text.strip()
+                    except:
+                        description_value = None
+
+                    print("value description:", description_value)
+
+                    try:
+                        location_element_map = next((item for item in self.search_map if item["typ"] == self.location_value["typ"]), None)
+                        location_element = self.driver.find_element(location_element_map["data"], self.location_value["feature"])
+                        location_value = location_element.text.strip()
+                    except:
+                        location_value = None
+
+                    print("value location:", location_value)
+
+                    try:
+                        content_element_map = next((item for item in self.search_map if item["typ"] == self.content_value["typ"]), None)
+                        content_container = self.driver.find_element(content_element_map["data"], self.content_value["feature"])
+                        content_value = content_container.text.strip()
+                    except:
+                        content_value = None
+
+                    print("value content:", content_value)
+
+                    try:
+                        email_element_map = next((item for item in self.search_map if item["typ"] == self.email_value["typ"]), None)
+                        email_container = self.driver.find_element(email_element_map["data"], self.email_value["feature"])
+                        email_content_value = email_container.text.strip()
+
+                        emails_value = re.findall(config.EMAIL_PATTERN, email_content_value)
+                        if emails_value:
+                            email_value = emails_value[0]
+                        else:
+                            email_value = None
+                    except:
+                        email_value = None
+
+                    print("value email:", email_value)
+                    ################################################################################
+
+                    try:
+                        anchor_tags = self.driver.find_elements(By.TAG_NAME, "a")
+                        if anchor_tags:
+                            try:
+                                new_url = [
+                                    (match.group(0))  # sesuai dengan pola
+                                    for tag in anchor_tags
+                                    if tag.get_attribute("href") and
+                                    (match := next((re.match(pattern, tag.get_attribute("href")) for pattern in self.pattern if re.match(pattern, tag.get_attribute("href"))), None)) is not None
+                                ]
+                                new_url_global_checked = [url for url in new_url if url not in self.manager.global_urls]
+                                self.url = list(dict.fromkeys(self.url + new_url_global_checked))
+
+                                print(len(new_url), len(new_url_global_checked), len(self.url))
+                            except Exception as e:
+                                print("error href")
                     except Exception as e:
-                        print("error href")
-            except Exception as e:
-                print("error anchor")
+                        print("error anchor")
 
-            try:
-                new_scrap = database.TScrap(url_s=url)
-                self.db.add(new_scrap)
-                self.db.flush()
-                id_scrap = new_scrap.id_s
-                
-                for data in search_data_array:
-                    category = self.db.query(database.TCategory).filter(database.TCategory.name_c == data["category"]).first()
-                    
-                    if not category:
-                        new_category = database.TCategory(name_c=data["category"])
-                        self.db.add(new_category)
-                        self.db.flush()
-                        id_category = new_category.id_c
-                        self.manager.global_categorys.append(data["category"])
+                    if title_value and (description_value or content_value):
+                        try:
+                            new_scrap = database.TScraping(
+                                url_s = url,
+                                title_s = title_value,
+                                description_s = description_value,
+                                location_s = location_value,
+                                content_s = content_value,
+                                email_s = email_value
+                            )
+                            self.db.add(new_scrap)
+                            self.db.commit()
+                            message = "ok"
+                        except Exception as e:
+                            self.db.rollback()
+                            message = "duplicate"
                     else:
-                        id_category = category.id_c
+                        message = "title not found"
                     
-                    new_data = database.TData(id_s=id_scrap, id_c=id_category, data_d=data["data"])
-                    self.db.add(new_data)
-                
-                self.db.commit()
-                
-                message = "ok"
-            except Exception as e:
-                self.db.rollback()
-                message = "duplicate"
+                    await self.manager.manager_information()
+                    try:
+                        await self.manager.manager_broadcast({"action": config.BotAction.SURFING.value, "message": message, "data": {"url": url, "title": title_value, "description": description_value, "location": location_value, "content": content_value, "email": email_value}})
+                    except Exception as e:
+                        print("Error WS")
+                except Exception as e:
+                    print("URL Error")
+            else:
+                print("duplikat")
             
-            await self.manager.manager_information()
-            try:
-                await self.websocket.send_json({"action": config.BotAction.SURFING.value, "message": message, "data": {"url": url, "data_search": search_data_array}})
-            except Exception as e:
-                print("Error WS")
+            await self.get_bot_status()
+            self.surfing_is_free = True
         else:
-            print("duplikat")
-        
-        await self.get_bot_status()
+            print("busy")
 
     def browser_check(self):
         if self.driver is None:

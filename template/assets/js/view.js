@@ -8,15 +8,28 @@ class View {
         this.form_pattern = null;
         this.input_pattern = null;
 
-        this.data_time = null;
         this.form_time = null;
         this.input_time = null;
 
-        this.data_search = null;
-        this.form_search = null;
-        this.input_search = null;
-        this.input_search_typ = null;
-        this.input_search_category = null;
+        this.form_title_search = null;
+        this.input_title_search = null;
+        this.input_search_title_typ = null;
+
+        this.form_description_search = null;
+        this.input_description_search = null;
+        this.input_search_description_typ = null;
+
+        this.form_location_search = null;
+        this.input_location_search = null;
+        this.input_search_location_typ = null;
+
+        this.form_content_search = null;
+        this.input_content_search = null;
+        this.input_search_content_typ = null;
+
+        this.form_email_search = null;
+        this.input_email_search = null;
+        this.input_search_email_typ = null;
 
         this.notification_info_value = null;
         this.bot_online_value = null;
@@ -24,11 +37,52 @@ class View {
         this.url_status_value = null;
         this.url_index_status_value = null;
         this.rest_status_value = null;
-        this.url_surfing_info_value = null;
-        this.data_surfing_info_value_container = null;
+        this.tbody_data_table = null;
         this.template();
     }
+    search_template(container, form_id, search_id, search_name) {
+        const search_typ_id = `typ_${search_id}`;
+        const searchForm = document.createElement('form');
+        searchForm.id = form_id;
 
+        const searchLabel = document.createElement('label');
+        searchLabel.setAttribute('for', search_id);
+        searchLabel.textContent = `${search_name}:`;
+        searchForm.appendChild(searchLabel);
+
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.name = search_id;
+        searchInput.id = search_id;
+        searchInput.required = true;
+        searchForm.appendChild(searchInput);
+
+        const searchTypLabel = document.createElement('label');
+        searchTypLabel.setAttribute('for', search_typ_id);
+        searchTypLabel.textContent = 'Type:';
+        searchForm.appendChild(searchTypLabel);
+
+        const searchTypSelect = document.createElement('select');
+        searchTypSelect.name = search_typ_id;
+        searchTypSelect.id = search_typ_id;
+        searchTypSelect.required = true;
+        const option1 = document.createElement('option');
+        option1.value = '1';
+        option1.textContent = 'TAG_NAME';
+        searchTypSelect.appendChild(option1);
+        const option2 = document.createElement('option');
+        option2.value = '2';
+        option2.textContent = 'CSS_SELECTOR';
+        searchTypSelect.appendChild(option2);
+        searchForm.appendChild(searchTypSelect);
+
+        container.appendChild(searchForm);
+        const hr = document.createElement("hr");
+        hr.style.marginTop = "10px";
+        hr.style.border = "3px solid black";
+        container.appendChild(hr);
+        return [searchForm, searchInput, searchTypSelect];
+    }
     template() {
         const app = document.getElementById('app');
         app.textContent = "";
@@ -114,34 +168,6 @@ class View {
         statusSection.appendChild(restStatusContainer);
 
         app.appendChild(statusSection);
-
-        //Surfing Info
-        const surfingInfoSection = document.createElement('section');
-        surfingInfoSection.id = 'info_surfing';
-        
-        const surfingInfoTitle = document.createElement('h2');
-        surfingInfoTitle.textContent = 'Surfing Info';
-        surfingInfoSection.appendChild(surfingInfoTitle);
-
-        const urlSurfingInfoContainer = document.createElement('div');
-        const urlSurfingInfo = document.createElement('span');
-        urlSurfingInfo.textContent = 'URL:';
-        urlSurfingInfoContainer.appendChild(urlSurfingInfo);
-        const urlSurfingInfoValue = document.createElement('span');
-        this.url_surfing_info_value = urlSurfingInfoValue;
-        urlSurfingInfoContainer.appendChild(urlSurfingInfoValue);
-        surfingInfoSection.appendChild(urlSurfingInfoContainer);
-
-        const dataSurfingInfoContainer = document.createElement('div');
-        const dataSurfingInfo = document.createElement('span');
-        dataSurfingInfo.textContent = 'Data:';
-        dataSurfingInfoContainer.appendChild(dataSurfingInfo);
-        const dataSurfingInfoValueContainer = document.createElement('div');
-        this.data_surfing_info_value_container = dataSurfingInfoValueContainer;
-        dataSurfingInfoContainer.appendChild(dataSurfingInfoValueContainer);
-        surfingInfoSection.appendChild(dataSurfingInfoContainer);
-
-        app.appendChild(surfingInfoSection);
         
         // Bot Surfing
         const botSurfingSection = document.createElement('section');
@@ -203,10 +229,11 @@ class View {
 
         const patternLabel = document.createElement('label');
         patternLabel.setAttribute('for', 'pattern');
-        patternLabel.textContent = 'Pattern:';
+        patternLabel.textContent = 'Pattern: https?://[^\s]+';
         patternForm.appendChild(patternLabel);
 
         const patternInput = document.createElement('input');
+        patternInput.value = "https://www.linkedin.com/in/(?!AC)[^/?#]+";
         this.input_pattern = patternInput;
         patternInput.type = 'text';
         patternInput.name = 'pattern';
@@ -230,11 +257,6 @@ class View {
         timeTitle.textContent = 'Time';
         timeSection.appendChild(timeTitle);
 
-        const dataTimeDiv = document.createElement('div');
-        this.data_time = dataTimeDiv;
-        dataTimeDiv.id = 'data_time';
-        timeSection.appendChild(dataTimeDiv);
-
         const timeForm = document.createElement('form');
         this.form_time = timeForm;
         timeForm.id = 'form_time';
@@ -252,11 +274,6 @@ class View {
         timeInput.required = true;
         timeForm.appendChild(timeInput);
 
-        const timeSubmit = document.createElement('button');
-        timeSubmit.type = 'submit';
-        timeSubmit.textContent = 'Submit';
-        timeForm.appendChild(timeSubmit);
-
         timeSection.appendChild(timeForm);
         configSection.appendChild(timeSection);
 
@@ -268,67 +285,28 @@ class View {
         searchTitle.textContent = 'Search Data';
         searchSection.appendChild(searchTitle);
 
-        const dataSearchDiv = document.createElement('div');
-        this.data_search = dataSearchDiv;
-        dataSearchDiv.id = 'data_search';
-        searchSection.appendChild(dataSearchDiv);
+        //---------------------------------------------------------------------
+        [this.form_title_search, this.input_title_search, this.input_search_title_typ] = this.search_template(searchSection, "form_search_title", "input_search_title", "Title");
+        [this.form_description_search, this.input_description_search, this.input_search_description_typ] = this.search_template(searchSection, "form_search_description", "input_search_description", "Description");
+        [this.form_location_search, this.input_location_search, this.input_search_location_typ] = this.search_template(searchSection, "form_search_location", "input_search_location", "Location");
+        [this.form_content_search, this.input_content_search, this.input_search_content_typ] = this.search_template(searchSection, "form_search_content", "input_search_content", "Content");
+        [this.form_email_search, this.input_email_search, this.input_search_email_typ] = this.search_template(searchSection, "form_search_email", "input_search_email", "Email");
+        //---------------------------------------------------------------------
+        this.input_title_search.value = "h1"
+        this.input_search_title_typ.value = "1"
 
-        const searchForm = document.createElement('form');
-        this.form_search = searchForm;
-        searchForm.id = 'form_search';
+        this.input_description_search.value = ".text-body-medium.break-words"
+        this.input_search_description_typ.value = "2"
 
-        const searchLabel = document.createElement('label');
-        searchLabel.setAttribute('for', 'search');
-        searchLabel.textContent = 'Search:';
-        searchForm.appendChild(searchLabel);
+        this.input_location_search.value = ".text-body-small.inline.t-black--light break-words"
+        this.input_search_location_typ.value = "2"
+        
+        this.input_content_search.value = ".display-flex.ph5.pv3"
+        this.input_search_content_typ.value = "2"
 
-        const searchInput = document.createElement('input');
-        this.input_search = searchInput;
-        searchInput.type = 'text';
-        searchInput.name = 'search';
-        searchInput.id = 'search';
-        searchInput.required = true;
-        searchForm.appendChild(searchInput);
+        this.input_email_search.value = ".display-flex.ph5.pv3"
+        this.input_search_email_typ.value = "2"
 
-        const searchTypLabel = document.createElement('label');
-        searchTypLabel.setAttribute('for', 'search_typ');
-        searchTypLabel.textContent = 'Type:';
-        searchForm.appendChild(searchTypLabel);
-
-        const searchTypSelect = document.createElement('select');
-        this.input_search_typ = searchTypSelect;
-        searchTypSelect.name = 'search_typ';
-        searchTypSelect.id = 'search_typ';
-        searchTypSelect.required = true;
-        const option1 = document.createElement('option');
-        option1.value = '1';
-        option1.textContent = 'TAG_NAME';
-        searchTypSelect.appendChild(option1);
-        const option2 = document.createElement('option');
-        option2.value = '2';
-        option2.textContent = 'CSS_SELECTOR';
-        searchTypSelect.appendChild(option2);
-        searchForm.appendChild(searchTypSelect);
-
-        const searchCategoryLabel = document.createElement('label');
-        searchCategoryLabel.setAttribute('for', 'search_category');
-        searchCategoryLabel.textContent = 'Category:';
-        searchForm.appendChild(searchCategoryLabel);
-
-        const searchCategoryInput = document.createElement('input');
-        this.input_search_category = searchCategoryInput;
-        searchCategoryInput.type = 'text';
-        searchCategoryInput.name = 'search_category';
-        searchCategoryInput.id = 'search_category';
-        searchCategoryInput.required = true;
-        searchForm.appendChild(searchCategoryInput);
-
-        const searchSubmit = document.createElement('button');
-        searchSubmit.type = 'submit';
-        searchSubmit.textContent = 'Submit';
-        searchForm.appendChild(searchSubmit);
-
-        searchSection.appendChild(searchForm);
         configSection.appendChild(searchSection);
 
         app.appendChild(configSection);
@@ -353,6 +331,27 @@ class View {
         workerSection.appendChild(workerCheckbox);
 
         app.appendChild(workerSection);
+
+        const table = document.createElement("table");
+        table.id = "data_table";
+
+        const thead = document.createElement("thead");
+        const trHead = document.createElement("tr");
+
+        ["URL", "Username", "Description",  "Location", "Content", "Email"].forEach(text => {
+            const th = document.createElement("th");
+            th.textContent = text;
+            trHead.appendChild(th);
+        });
+
+        thead.appendChild(trHead);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        this.tbody_data_table = tbody;
+        table.appendChild(tbody);
+
+        app.appendChild(table);
     }
 
     notification(message) {
@@ -375,11 +374,27 @@ class View {
     }
 
     bind_bot_time(handler) {
-        this.form_time.addEventListener("submit", handler);
+        this.form_time.addEventListener("change", handler);
     }
 
-    bind_bot_search(handler) {
-        this.form_search.addEventListener("submit", handler);
+    bind_bot_title(handler) {
+        this.form_title_search.addEventListener("change", handler);
+    }
+
+    bind_bot_description(handler) {
+        this.form_description_search.addEventListener("change", handler);
+    }
+
+    bind_bot_location(handler) {
+        this.form_location_search.addEventListener("change", handler);
+    }
+
+    bind_bot_content(handler) {
+        this.form_content_search.addEventListener("change", handler);
+    }
+
+    bind_bot_email(handler) {
+        this.form_email_search.addEventListener("change", handler);
     }
 
     update_information(data) {
@@ -388,82 +403,24 @@ class View {
     }
 
     update_status(data) {
-        this.url_status_value.textContent = data.url.length;
+        //console.log(data)
+        this.url_status_value.textContent = data.url;
         this.url_index_status_value.textContent = data.url_index;
         this.rest_status_value.textContent = this.url_status_value.textContent - this.url_index_status_value.textContent;
     }
 
     update_surfing_info(data) {
-        this.data_surfing_info_value_container.innerHTML = null;
-        this.url_surfing_info_value.textContent = data.url;
-        data.data_search.forEach(element => {
-            const category = document.createElement("div");
-            const data = document.createElement("div");
-            category.innerHTML = `<b>Category:</b> `;
-            category.appendChild(document.createTextNode(element.category));
-            data.innerHTML = `<b>Data:</b> `;
-            data.appendChild(document.createTextNode(element.data));
-            this.data_surfing_info_value_container.appendChild(category);
-            this.data_surfing_info_value_container.appendChild(data);
-        });
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><a href="${data.url}">${data.url}</a></td>
+            <td>${data.title}</td>
+            <td>${data.description}</td>
+            <td>${data.location}</td>
+            <td>${data.content}</td>
+            <td>${data.email}</td>
+        `;
+        this.tbody_data_table.prepend(row);
     }
 }
 
 export default View;
-
-
-
-
-
-
-
-
-/* const View = (() => {
-    let bot_surfing;
-    let bot_surfing_url;
-    let bot_remote;
-
-    function init(){
-        template()
-    }
-
-    function get_bot_surfing_url(){
-        return bot_surfing_url; //gk bisa mendapatkan data real time tanpa fungsi
-    }
-
-    function template() {
-        const app = document.getElementById('app');
-        app.textContent = "";
-        
-        //Bot Surfing
-        const botSurfingSection = document.createElement('section');
-        botSurfingSection.id = 'bot_surfing';
-
-        ...
-
-        app.appendChild(workerSection);
-    }
-
-    function notification(message){
-        console.log(message);
-    }
-    
-    function bind_bot_surfing(handler) {
-        bot_surfing.addEventListener("submit", handler);
-    }
-
-    function bind_bot_remote(handler) {
-        bot_remote.addEventListener("change", handler);
-    }
-
-    return {
-        bot_surfing_url, //tidak berguna karena tidak realtime
-        get_bot_surfing_url,
-        init,
-        notification,
-        bind_bot_surfing,
-        bind_bot_remote,
-    };
-})();
-
-export default View; */

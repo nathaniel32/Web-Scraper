@@ -7,9 +7,13 @@ class Model {
             CONFIG: "config",
             STATUS: "status",
         });
-        this.pattern_array = []
-        this.data_time = 0
-        this.search_array = []
+        this.pattern_array = [];
+        this.data_time = 0;
+        this.data_title = {feature: null, typ:null};
+        this.data_description = {feature: null, typ:null};
+        this.data_location = {feature: null, typ:null};
+        this.data_content = {feature: null, typ:null};
+        this.data_email = {feature: null, typ:null};
     }
 
     get_config_data(view_class) {
@@ -18,17 +22,8 @@ class Model {
         pattern_data.forEach((element) => {
             const pattern_value = element.getAttribute("data-pattern");
             pattern_array.push(pattern_value);
-        });
-
-        const data_time_value = view_class.data_time.getAttribute("data-time");
-
-        const search_data = view_class.data_search.querySelectorAll("[data-search]");
-        const search_array = [];
-        search_data.forEach((element) => {
-            const search_value = element.getAttribute("data-search");
-            search_array.push(JSON.parse(search_value));
-        });
-        return [pattern_array, data_time_value, search_array];
+        });        
+        return [pattern_array, this.data_time, this.data_title, this.data_description, this.data_location, this.data_content, this.data_email];
     }
 }
 
