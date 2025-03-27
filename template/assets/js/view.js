@@ -305,8 +305,8 @@ class View {
         this.input_content_search.value = ".display-flex.ph5.pv3";
         this.input_search_content_typ.value = "2";
 
-        this.input_email_search.value = ".display-flex.ph5.pv3";
-        this.input_search_email_typ.value = "2";
+        this.input_email_search.value = "body";
+        this.input_search_email_typ.value = "1";
 
         configSection.appendChild(searchSection);
 
